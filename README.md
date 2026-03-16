@@ -1,6 +1,6 @@
 # rfidfyi
 
-[![PyPI](https://img.shields.io/pypi/v/rfidfyi)](https://pypi.org/project/rfidfyi/)
+[![PyPI version](https://agentgif.com/badge/pypi/rfidfyi/version.svg)](https://pypi.org/project/rfidfyi/)
 [![Python](https://img.shields.io/pypi/pyversions/rfidfyi)](https://pypi.org/project/rfidfyi/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
