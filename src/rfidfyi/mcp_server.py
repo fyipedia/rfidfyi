@@ -1,142 +1,88 @@
-"""MCP server for rfidfyi — RFID tag and frequency band tools for AI assistants.
+"""MCP server for rfidfyi — AI assistant tools for rfidfyi.com.
 
-Requires the ``mcp`` extra: ``pip install rfidfyi[mcp]``
-
-Run as a standalone server::
-
-    python -m rfidfyi.mcp_server
-
-Or configure in ``claude_desktop_config.json``::
-
-    {
-        "mcpServers": {
-            "rfidfyi": {
-                "command": "python",
-                "args": ["-m", "rfidfyi.mcp_server"]
-            }
-        }
-    }
+Run: uvx --from "rfidfyi[mcp]" python -m rfidfyi.mcp_server
 """
-
 from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("rfidfyi")
+mcp = FastMCP("RFIDFYI")
 
 
 @mcp.tool()
-def rfid_search(query: str) -> str:
-    """Search for RFID tags, readers, standards, and terminology on RFIDFYI.
-
-    Search across RFID tags (passive, active, semi-passive), readers, frequency bands
-    (LF, HF, UHF, SHF), standards (ISO 18000, EPC Gen2), and glossary terms.
+def list_frequency_bands(limit: int = 20, offset: int = 0) -> str:
+    """List frequency_bands from rfidfyi.com.
 
     Args:
-        query: Search term (e.g. "uhf", "epc gen2", "impinj", "backscatter").
+        limit: Maximum number of results. Default 20.
+        offset: Number of results to skip. Default 0.
     """
     from rfidfyi.api import RFIDFYI
 
     with RFIDFYI() as api:
-        results = api.search(query)
-
-    items = results.get("results", [])
-    if not items:
-        return f"No results found for '{query}'."
-
-    lines = [
-        f"## RFID Search: {query}",
-        "",
-        f"Found {len(items)} result(s):",
-        "",
-        "| Type | Name | Slug |",
-        "|------|------|------|",
-    ]
-
-    for item in items:
-        t, n, s = item.get("type", ""), item.get("name", ""), item.get("slug", "")
-        lines.append(f"| {t} | {n} | {s} |")
-
-    return "\n".join(lines)
+        data = api.list_frequency_bands(limit=limit, offset=offset)
+        results = data.get("results", data) if isinstance(data, dict) else data
+        if not results:
+            return "No frequency_bands found."
+        items = results[:limit] if isinstance(results, list) else []
+        return "\n".join(f"- {item.get('name', item.get('slug', '?'))}" for item in items)
 
 
 @mcp.tool()
-def rfid_lookup(slug: str) -> str:
-    """Look up a specific RFID tag by slug.
-
-    Returns full specifications including tag type (passive/active/semi-passive),
-    frequency band, protocol, memory size, read range, and EPC length.
+def get_frequency_band(slug: str) -> str:
+    """Get detailed information about a specific frequency_band.
 
     Args:
-        slug: Tag slug (e.g. "impinj-monza-r6", "alien-squiggle", "nxp-ucode-8").
+        slug: URL slug identifier for the frequency_band.
     """
     from rfidfyi.api import RFIDFYI
 
     with RFIDFYI() as api:
-        data = api.tag(slug)
-
-    lines = [
-        f"## {data.get('name', slug)}",
-        "",
-        data.get("description", ""),
-        "",
-        f"- **Type**: {data.get('tag_type', 'N/A')}",
-        f"- **Frequency**: {data.get('frequency', 'N/A')}",
-        f"- **Protocol**: {data.get('protocol', 'N/A')}",
-        f"- **Memory**: {data.get('memory', 'N/A')}",
-        f"- **Read Range**: {data.get('read_range', 'N/A')}",
-        f"- **EPC Length**: {data.get('epc_length', 'N/A')}",
-        f"- **Manufacturer**: {data.get('manufacturer', 'N/A')}",
-    ]
-
-    standards = data.get("standards", [])
-    if standards:
-        lines.append("")
-        lines.append("### Standards")
-        for st in standards:
-            lines.append(f"- {st.get('name', '')} ({st.get('issuing_body', '')})")
-
-    return "\n".join(lines)
+        data = api.get_frequency_band(slug)
+        return str(data)
 
 
 @mcp.tool()
-def rfid_compare(slug_a: str, slug_b: str) -> str:
-    """Compare two RFID tags side by side.
+def list_readers(limit: int = 20, offset: int = 0) -> str:
+    """List readers from rfidfyi.com.
 
     Args:
-        slug_a: First tag slug (e.g. "impinj-monza-r6").
-        slug_b: Second tag slug (e.g. "alien-higgs-ec").
+        limit: Maximum number of results. Default 20.
+        offset: Number of results to skip. Default 0.
     """
     from rfidfyi.api import RFIDFYI
 
     with RFIDFYI() as api:
-        data = api.compare(slug_a, slug_b)
+        data = api.list_readers(limit=limit, offset=offset)
+        results = data.get("results", data) if isinstance(data, dict) else data
+        if not results:
+            return "No readers found."
+        items = results[:limit] if isinstance(results, list) else []
+        return "\n".join(f"- {item.get('name', item.get('slug', '?'))}" for item in items)
 
-    a = data.get("a", {})
-    b = data.get("b", {})
-    a_name = a.get("name", slug_a)
-    b_name = b.get("name", slug_b)
 
-    lines = [
-        f"## {a_name} vs {b_name}",
-        "",
-        f"| Property | {a_name} | {b_name} |",
-        "|----------|" + "-" * len(a_name) + "--|" + "-" * len(b_name) + "--|",
-    ]
+@mcp.tool()
+def search_rfid(query: str) -> str:
+    """Search rfidfyi.com for RFID frequency bands, readers, and EPC schemes.
 
-    fields = [
-        ("Type", "tag_type"),
-        ("Frequency", "frequency"),
-        ("Protocol", "protocol"),
-        ("Memory", "memory"),
-        ("Read Range", "read_range"),
-        ("EPC Length", "epc_length"),
-    ]
-    for label, key in fields:
-        lines.append(f"| {label} | {a.get(key, '-')} | {b.get(key, '-')} |")
+    Args:
+        query: Search query string.
+    """
+    from rfidfyi.api import RFIDFYI
 
-    return "\n".join(lines)
+    with RFIDFYI() as api:
+        data = api.search(query)
+        results = data.get("results", data) if isinstance(data, dict) else data
+        if not results:
+            return f"No results found for \"{query}\"."
+        items = results[:10] if isinstance(results, list) else []
+        return "\n".join(f"- {item.get('name', item.get('slug', '?'))}" for item in items)
+
+
+def main() -> None:
+    """Run the MCP server."""
+    mcp.run()
 
 
 if __name__ == "__main__":
-    mcp.run()
+    main()
