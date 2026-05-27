@@ -1,6 +1,6 @@
 [project]
 name = "rfidfyi"
-version = "0.1.1"
+version = "0.1.2"
 description = "RFID tag and frequency band encyclopedia API client — look up passive, active, and semi-passive tags, EPC Gen2, ISO 18000 standards, and read range specifications from RFIDFYI."
 readme = "README.md"
 license = "MIT"

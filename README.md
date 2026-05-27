@@ -296,6 +296,15 @@ Embed [RFIDFYI](https://rfidfyi.com) widgets on any website with [rfidfyi-embed]
 
 Zero dependencies · Shadow DOM · 4 themes (light/dark/sepia/auto) · [Widget docs](https://widget.rfidfyi.com)
 
+## Recently Updated (v0.1.2)
+
+Latest content state on [https://rfidfyi.com](https://rfidfyi.com):
+- [Homepage](https://rfidfyi.com)
+- [Developer documentation](https://rfidfyi.com/developers/)
+- [Sitemap (full content index)](https://rfidfyi.com/sitemap.xml)
+
+Version bumped 2026-05-27 as part of the FYIPedia [SEO recovery refresh](https://github.com/dobestan).
+
 ## License
 
 MIT
